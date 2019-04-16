@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<script type="text/javascript" src="../js/move.js"></script>
+<script type="text/javascript" src="../entity/player.js"></script>
+<body>
+	<canvas width="800" height="600" id="cvs" style="border: 1px #ccc solid"></canvas>
+	<script type="text/javascript">
+
+		//上个例子中我们计算了线段与线段的交点
+		//这里例子我们来处理计算快速点状或者小物体与另一个物体之间的碰撞,比如子弹与物体之间碰撞
+		//为什么要通过线段与线段之间的碰撞来解决呢,因为代码中的世界是非连续的,上一秒的位置没有碰撞,下一秒可能就进入物体内部或者穿出物体,通过边界检测无法满足需求,所以我们计算下一次移动的位置,与这次位置形成线段,通过线段与物体各个边界的碰撞来解决
+
+		let canvas=document.querySelector('#cvs');
+		let ctx=canvas.getContext('2d');
+		//申明一个点	
+		let player=new Player(100,100,30);
+		let vetexs=[];
+		let bullets=[];
+		let range=300;
+		let d=Math.PI/5
+		for(let i=0;i<=Math.PI*2;i+=d){
+			vetexs.push({x:300+Math.cos(i)*200,y:300+Math.sin(i)*200})
+		}
+		//vetexs.push({x:300,y:400})
+		//移动工具类
+		let move=new Move(5)
+		let hits=[];
+		let mx=0;
+		let my=0;
+		window.addEventListener('mousemove',e=>{
+			mx=e.clientX
+			my=e.clientY;
+		})
+		window.addEventListener('mousedown',e=>{
+			let bullet={x:player.x+Math.cos(player.angle)*40,y:player.y+Math.sin(player.angle)*40,life:200,speed:10,angle:player.angle}
+			bullets.push(bullet)
+		})
+		update();
+
+		//更新函数
+		function update(){
+			move.update(player);
+			player.angle=Math.atan2(my-player.y,mx-player.x);
+			updateBullets();
+			render();
+			requestAnimationFrame(update);
+		}
+		//计算并更新子弹位置
+		function updateBullets(){
+			for(let i=bullets.length-1;i>=0;i--){
+				let bullet=bullets[i]
+				if(bullet.life<=0){
+					bullets.splice(i,1)
+					continue;
+				}
+				let bx=bullet.x+Math.cos(bullet.angle)*bullet.speed
+				let by=bullet.y+Math.sin(bullet.angle)*bullet.speed
+				let bt={x:bx,y:by}
+				let collision=null
+				for(let i=0;i<vetexs.length-1;i++){
+					let temp=getIntersection(vetexs[i],vetexs[i+1],bullet,bt)
+					if(temp&&(!collision||temp.rate<collision.rate)){
+						collision=temp;
+						collision.v={x:vetexs[i+1].x-vetexs[i].x,y:vetexs[i+1].y-vetexs[i].y}
+					}
+				}
+				if(collision){
+					let angle=2*Math.atan2(collision.v.y,collision.v.x)-bullet.angle
+					bullet.x=collision.x;
+					bullet.y=collision.y;
+					bullet.angle=angle;
+					bullet.x+=Math.cos(bullet.angle)*0.01
+					bullet.y+=Math.sin(bullet.angle)*0.01
+				}else{
+					bullet.x=bx;
+					bullet.y=by;
+				}
+				bullet.life--;
+			}
+		}
+
+		
+		//渲染函数
+		function render(){
+			ctx.clearRect(0,0,800,600);
+			drawPlayer()
+			drawLine()
+			drawBullets()
+		}
+		//画玩家
+		function drawPlayer(){
+			player.render(ctx)
+		}
+		//画线
+		function drawLine(){
+			ctx.beginPath();
+			for(let i=0;i<vetexs.length-1;i++){
+				ctx.moveTo(vetexs[i].x,vetexs[i].y);
+				ctx.lineTo(vetexs[i+1].x,vetexs[i+1].y);
+			}
+			ctx.closePath();
+			ctx.stroke();
+		}
+		//画子弹
+		function drawBullets(){
+			ctx.fillStyle="#000"
+			bullets.forEach(b=>{
+				ctx.beginPath()
+				ctx.arc(b.x,b.y,2,0,Math.PI*2)
+				ctx.closePath()
+				ctx.fill();
+			})
+		}
+		
+
+		//交点算法1,通过列方程组化简
+		//假设p1-p2线段与p3-p4线段有交点
+		//交点位于p1->p2线段占比为n,(这个占比=(p1->交点)/(p1->p2))
+		//交点位于p3->p4线段占比为m,(这个占比=(p3->交点)/(p3->p4))
+		//那么可以得出 交点x位置为x1+Δx1*n,还等于x3+Δx3*m
+		//同理得出交点y位置为y1+Δy1*n,还等于y3+Δy3*m
+		//列方程组并化简可以得出m=(y1+(Δy1/Δx1)*(x3-x1)-y3)/(Δy3-(Δy1/Δx1)*Δx3)
+		//n=(x3+Δx3*m-x1)/(Δx1)
+		function getIntersection(p1,p2,p3,p4) {
+			let dx1=p2.x-p1.x;  //Δx1
+			let dy1=p2.y-p1.y;  //Δy1
+			let dx3=p4.x-p3.x;  //Δx3
+			let dy3=p4.y-p3.y;  //Δy3
+			let k1=(dy1/dx1);   
+			let k3=(dy3/dx3);
+			if(k1==k3||k1==-k3)return null; //斜率相等或者相反,代表平行,平行无交点
+			let m=(p1.y+k1*(p3.x-p1.x)-p3.y)/(dy3-(k1)*dx3)
+			if (isNaN(m)) return null;
+			let n=(p3.x+dx3*m-p1.x)/(dx1)
+			//console.log(m,n)
+			if(m<0||m>1||n<0||n>1){
+				return null;
+			}
+			return {
+				x:p3.x+dx3*m, //碰撞点的x坐标
+				y:p3.y+dy3*m, //碰撞点的y坐标
+				rate:m        //在线段3-4的占比
+			}
+		}
+
+	</script>
+</body>
+</html>

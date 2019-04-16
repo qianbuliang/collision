@@ -5,8 +5,11 @@
 </head>
 <script type="text/javascript" src="../js/move.js"></script>
 <body>
-	<canvas width="800" height="600" id="cvs"></canvas>
+	<canvas width="800" height="600" id="cvs" style="border: 1px #ccc solid"></canvas>
 	<script type="text/javascript">
+
+
+
 		let canvas=document.querySelector('#cvs');
 		let ctx=canvas.getContext('2d');
 		//申明一个点	
@@ -38,7 +41,7 @@
 			let p4={x:point.x+Math.cos(angle)*range,y:point.y+Math.sin(angle)*range}
 			hits.length=0;
 			for(let i=0;i<vetexs.length-1;i++){
-				let hit=getIntersection1(vetexs[i],vetexs[i+1],point,p4)
+				let hit=getIntersection(vetexs[i],vetexs[i+1],point,p4)
 				if(hit){
 					hits.push(hit)
 				}
@@ -56,13 +59,14 @@
 			drawLine()
 			drawHit()
 		}
-
+		//画代表玩家的点
 		function drawPoint(){
 			ctx.beginPath();
 			ctx.arc(point.x,point.y,2,0,Math.PI*2);
 			ctx.closePath();
 			ctx.fill();
 		}
+		//画线段
 		function drawLine(){
 			ctx.beginPath();
 			for(let i=0;i<vetexs.length-1;i++){
@@ -72,7 +76,7 @@
 			ctx.closePath();
 			ctx.stroke();
 		}
-
+		//画碰撞点
 		function drawHit(){
 			ctx.beginPath();
 			ctx.moveTo(point.x,point.y);
@@ -87,7 +91,38 @@
 			}
 		}
 
-		function getIntersection(p1,p2,p3,p4){
+		//交点算法1,通过列方程组化简
+		//假设p1-p2线段与p3-p4线段有交点
+		//交点位于p1->p2线段占比为n,(这个占比=(p1->交点)/(p1->p2))
+		//交点位于p3->p4线段占比为m,(这个占比=(p3->交点)/(p3->p4))
+		//那么可以得出 交点x位置为x1+Δx1*n,还等于x3+Δx3*m
+		//同理得出交点y位置为y1+Δy1*n,还等于y3+Δy3*m
+		//列方程组并化简可以得出m=(y1+(Δy1/Δx1)*(x3-x1)-y3)/(Δy3-(Δy1/Δx1)*Δx3)
+		//n=(x3+Δx3*m-x1)/(Δx1)
+		function getIntersection(p1,p2,p3,p4) {
+			let dx1=p2.x-p1.x;  //Δx1
+			let dy1=p2.y-p1.y;  //Δy1
+			let dx3=p4.x-p3.x;  //Δx3
+			let dy3=p4.y-p3.y;  //Δy3
+			let k1=(dy1/dx1);   
+			let k3=(dy3/dx3);
+			if(k1==k3||k1==-k3)return null; //斜率相等或者相反,代表平行,平行无交点
+			let m=(p1.y+k1*(p3.x-p1.x)-p3.y)/(dy3-(k1)*dx3)
+			if (isNaN(m)) return null;
+			let n=(p3.x+dx3*m-p1.x)/(dx1)
+			//console.log(m,n)
+			if(m<0||m>1||n<0||n>1){
+				return null;
+			}
+			return {
+				x:p3.x+dx3*m, //碰撞点的x坐标
+				y:p3.y+dy3*m, //碰撞点的y坐标
+				rate:m        //在线段3-4的占比
+			}
+		}
+
+		//检测方法二通过向量和三角函数计算,效率不如1,不介绍,有兴趣自己看
+		function getIntersection1(p1,p2,p3,p4){
 			let v12=getV(p1,p2)
 			let v34=getV(p3,p4)
 			let v13=getV(p1,p3)
@@ -111,7 +146,7 @@
 			let hitx=p3.x+Math.cos(d34)*distance
 			let hity=p3.y+Math.sin(d34)*distance
 
-			let hit={x:hitx,y:hity,distance:distance}
+			let hit={x:hitx,y:hity,rate:distance}
 			let v1hit=getV(p1,hit)
 			//方向是否一致
 			if(v1hit.x*v12.x<0){
@@ -125,7 +160,6 @@
 				return null;
 			}	
 			return hit;
-		//	console.log(distance)
 		}
 		//向量点乘
 		function dc(v1,v2){
@@ -145,28 +179,7 @@
 		}
 
 
-		//
-		function getIntersection1(p1,p2,p3,p4) {
-			let dx1=p2.x-p1.x;
-			let dy1=p2.y-p1.y;
-			let dx3=p4.x-p3.x;
-			let dy3=p4.y-p3.y;
-			let k1=(dy1/dx1);
-			let k3=(dy3/dx3);
-			if(k1==k3||k1==-k3)return null;
-			let m=(p1.y+k1*(p3.x-p1.x)-p3.y)/(dy3-(k1)*dx3)
-			if (isNaN(m)) return null;
-			let n=(p3.x+dx3*m-p1.x)/(dx1)
-			//console.log(m,n)
-			if(m<0||m>1||n<0||n>1){
-				return null;
-			}
-			return {
-				x:p3.x+dx3*m,
-				y:p3.y+dy3*m,
-				rate:m
-			}
-		}
+	
 
 	</script>
 </body>
