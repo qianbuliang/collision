@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<script type="text/javascript" src="../js/move.js"></script>
+<body>
+	<canvas width="800" height="600" id="cvs"></canvas>
+	<script type="text/javascript">
+		let canvas=document.querySelector('#cvs');
+		let ctx=canvas.getContext('2d');
+		//申明一个点	
+		let point={x:100,y:100};
+		//申明两个点作为一条线段
+		let vetexs=[{x:200,y:200},{x:300,y:400},{x:500,y:200},{x:500,y:500},{x:300,y:500},{x:200,y:200}];
+
+		//移动工具类
+		let move=new Move(5)
+		let hits=[];
+		update();
+
+		//更新函数
+		function update(){
+			move.update(point);
+			hits.length=0;
+			if(vetexs.length>1){
+				for(let i=0;i<vetexs.length-1;i++){
+					let hit=pointToLineDistance(vetexs[i],vetexs[i+1],point);
+					hits.push(hit);
+				}
+			
+			}
+			
+			render();
+			requestAnimationFrame(update);
+		}
+		
+		//渲染函数
+		function render(){
+			ctx.clearRect(0,0,800,600);
+			drawPoint()
+			drawLine()
+			lineHit()
+		}
+
+		function drawPoint(){
+			ctx.beginPath();
+			ctx.arc(point.x,point.y,2,0,Math.PI*2);
+			ctx.closePath();
+			ctx.fill();
+		}
+		function drawLine(){
+			if(vetexs.length>1){
+				ctx.beginPath();
+				for(let i=0;i<vetexs.length-1;i++){
+					ctx.moveTo(vetexs[i].x,vetexs[i].y);
+					ctx.lineTo(vetexs[i+1].x,vetexs[i+1].y);
+				}
+				ctx.closePath();
+				ctx.stroke();
+			}
+		}
+
+		function lineHit(){
+			if(hits.length){
+				hits.forEach(hit=>{
+					ctx.beginPath();
+					ctx.moveTo(point.x,point.y);
+					ctx.lineTo(hit.x,hit.y);
+					ctx.closePath();
+					ctx.stroke();
+				})
+			}
+		}
+
+		//点到线段距离
+		//p1,p2线段
+		//p3为点
+		//点到直线的最近距离是垂线,但是如果点到线段的距离不一样
+		//在点与线段起始点组成的角度都是锐角时,点向线段的垂线在线段内,为最近
+		//在点与线段起始点任意一个组成的角度是顿角时,点向线段的垂线在线段外,点到线段最近距离为组成钝角的那个起点或者终点
+		//如何判断两个向量的夹角时什么角呢,向量a·向量b=|a|*|b|*cos(θ)=x1*x2+y1*y2
+		//所以cos(θ)=(x1*x2+y1*y2)/(|a|*|b|)
+		//因为只需要判断钝角还是锐角,|a|和|b|均为正
+		//所以(x1*x2+y1*y2)>0时为锐角,(x1*x2+y1*y2)<0时为钝角
+		//所以距离分三种情况
+		//命名方便理解 如:v12代表线段1-2,方向1指向2
+		//为了详细展示效果,返回值中我添加了最近距离的点的计算,按实际需求决定是否计算
+		function pointToLineDistance(p1,p2,p3){
+
+			let v12={x:p2.x-p1.x,y:p2.y-p1.y};
+			let v13={x:p3.x-p1.x,y:p3.y-p1.y};
+			if(dc(v12,v13)<0)return {x:p1.x,y:p1.y,distance:mc(v13)};
+
+			let v21={x:-v12.x,y:-v12.y};
+			let v23={x:p3.x-p2.x,y:p3.y-p2.y}
+			if(dc(v21,v23)<0)return {x:p2.x,y:p2.y,distance:mc(v23)};
+
+			//12线段角度
+			let angle_12=jd(v12);
+			//13线段角度
+			let angle_13=jd(v13);
+			//12和13夹角
+			let angle=angle_13-angle_12;
+			//垂线角度
+			let d_angle=angle_12-Math.PI/2
+			//13模长
+			let m13=mc(v13)
+			//这个distance可能为正可能为负
+			let distance=m13*Math.sin(angle)
+			let x=p3.x+Math.cos(d_angle)*distance
+			let y=p3.y+Math.sin(d_angle)*distance
+			return {x:x,y:y,distance:Math.abs(distance)};
+
+		}
+
+		//向量点乘
+		function dc(v1,v2){
+			return v1.x*v2.x+v1.y*v2.y;
+		}
+		//向量模长
+		function mc(v){
+			return Math.sqrt(v.y*v.y+v.x*v.x);
+		}
+		//向量角度
+		function jd(v){
+			return Math.atan2(v.y,v.x);
+		}
+	</script>
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<script type="text/javascript" src="../js/move.js"></script>
+<body>
+	<canvas width="800" height="600" id="cvs"></canvas>
+	<script type="text/javascript">
+		let canvas=document.querySelector('#cvs');
+		let ctx=canvas.getContext('2d');
+		//申明一个点	
+		let point={x:100,y:100};
+		//申明两个点作为一条线段
+		let vetexs=[];
+		let range=300;
+		let d=Math.PI/5
+		for(let i=0;i<=Math.PI*2;i+=d){
+			vetexs.push({x:300+Math.cos(i)*200,y:300+Math.sin(i)*200})
+		}
+		//vetexs.push({x:300,y:400})
+		//移动工具类
+		let move=new Move(5)
+		let hits=[];
+		let angle=0;
+		let mx=0;
+		let my=0;
+		window.addEventListener('mousemove',e=>{
+			mx=e.clientX
+			my=e.clientY;
+		})
+		update();
+
+		//更新函数
+		function update(){
+			move.update(point);
+			angle=Math.atan2(my-point.y,mx-point.x)
+			let p4={x:point.x+Math.cos(angle)*range,y:point.y+Math.sin(angle)*range}
+			hits.length=0;
+			for(let i=0;i<vetexs.length-1;i++){
+				let hit=getIntersection1(vetexs[i],vetexs[i+1],point,p4)
+				if(hit){
+					hits.push(hit)
+				}
+			}
+			
+			render();
+			requestAnimationFrame(update);
+		}
+
+		
+		//渲染函数
+		function render(){
+			ctx.clearRect(0,0,800,600);
+			drawPoint()
+			drawLine()
+			drawHit()
+		}
+
+		function drawPoint(){
+			ctx.beginPath();
+			ctx.arc(point.x,point.y,2,0,Math.PI*2);
+			ctx.closePath();
+			ctx.fill();
+		}
+		function drawLine(){
+			ctx.beginPath();
+			for(let i=0;i<vetexs.length-1;i++){
+				ctx.moveTo(vetexs[i].x,vetexs[i].y);
+				ctx.lineTo(vetexs[i+1].x,vetexs[i+1].y);
+			}
+			ctx.closePath();
+			ctx.stroke();
+		}
+
+		function drawHit(){
+			ctx.beginPath();
+			ctx.moveTo(point.x,point.y);
+			ctx.lineTo(point.x+Math.cos(angle)*range,point.y+Math.sin(angle)*range);
+			ctx.closePath();
+			ctx.stroke();
+			ctx.fillStyle="red"
+			if(hits.length){
+				hits.forEach(hit=>{
+					ctx.fillRect(hit.x-5,hit.y-5,10,10)
+				})
+			}
+		}
+
+		function getIntersection(p1,p2,p3,p4){
+			let v12=getV(p1,p2)
+			let v34=getV(p3,p4)
+			let v13=getV(p1,p3)
+			let d12=jd(v12)
+			let d13=jd(v13)
+			let d34=jd(v34)
+			let d43=d34-Math.PI
+
+			let theta1=d13-d12
+			let theta2=d43-d13
+			let l=mc(v13)
+
+			//如果distance小于0说明焦点在p3->p4的相反方向,即交点在34线段外
+			let distance=l/(Math.sin(theta2)*Math.cos(theta1)/Math.sin(theta1)+Math.cos(theta2))
+			if(distance<0){
+				return null;
+			}
+			//交点与p3距离大于线段34长度,即交点在34线段外
+			if(distance>mc(v34))return null;
+
+			let hitx=p3.x+Math.cos(d34)*distance
+			let hity=p3.y+Math.sin(d34)*distance
+
+			let hit={x:hitx,y:hity,distance:distance}
+			let v1hit=getV(p1,hit)
+			//方向是否一致
+			if(v1hit.x*v12.x<0){
+				return null;
+			}
+			if(v1hit.y*v12.y<0){
+				return null;
+			}
+			//长度是否在范围内
+			if(mc(v1hit)>mc(v12)){
+				return null;
+			}	
+			return hit;
+		//	console.log(distance)
+		}
+		//向量点乘
+		function dc(v1,v2){
+			return v1.x*v2.x+v1.y*v2.y;
+		}
+		//向量模长
+		function mc(v){
+			return Math.sqrt(v.y*v.y+v.x*v.x);
+		}
+		//向量角度
+		function jd(v){
+			return Math.atan2(v.y,v.x);
+		}
+
+		function getV(p1,p2){
+			return {x:p2.x-p1.x,y:p2.y-p1.y}
+		}
+
+
+		//
+		function getIntersection1(p1,p2,p3,p4) {
+			let dx1=p2.x-p1.x;
+			let dy1=p2.y-p1.y;
+			let dx3=p4.x-p3.x;
+			let dy3=p4.y-p3.y;
+			let k1=(dy1/dx1);
+			let k3=(dy3/dx3);
+			if(k1==k3||k1==-k3)return null;
+			let m=(p1.y+k1*(p3.x-p1.x)-p3.y)/(dy3-(k1)*dx3)
+			if (isNaN(m)) return null;
+			let n=(p3.x+dx3*m-p1.x)/(dx1)
+			//console.log(m,n)
+			if(m<0||m>1||n<0||n>1){
+				return null;
+			}
+			return {
+				x:p3.x+dx3*m,
+				y:p3.y+dy3*m,
+				rate:m
+			}
+		}
+
+	</script>
+</body>
+</html>
