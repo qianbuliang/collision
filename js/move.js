@@ -29,7 +29,7 @@ class Move{
             this.keys[key] = false;
     }
 
-    update(point) {
+    update(point,angle,speed) {
         let k=0;
         if(this.keys.w){
             k-=1;
@@ -66,8 +66,15 @@ class Move{
             }
             this.speed=this.initspeed;
         }
-
-        point.x+=Math.cos(this.angle)*this.speed;
-        point.y+=Math.sin(this.angle)*this.speed;
+        let a=this.angle;
+        if(angle!=undefined&&angle!=null){
+            a=angle;
+        }
+        let s=this.speed;
+        if(speed!=undefined&&speed!=null){
+            s=speed;
+        }
+        point.x+=Math.cos(a)*s;
+        point.y+=Math.sin(a)*s;
     }
 }
