@@ -25,7 +25,7 @@
 		/*for(let i=Math.PI/4;i<=Math.PI*2+Math.PI/4;i+=d){
 			vetexs.push({x:300+Math.cos(i)*200,y:300+Math.sin(i)*200})
 		}*/
-		vetexs.push({x:300,y:200},{x:400,y:200},{x:500,y:400},{x:400,y:300},{x:400,y:400},{x:300,y:500},{x:300,y:200})
+		vetexs.push({x:300,y:200},{x:400,y:200},{x:500,y:400},{x:400,y:300},{x:350,y:300},{x:300,y:500},{x:200,y:300})
 		//vetexs.push({x:300,y:400})
 		//移动工具类
 		let move=new Move(5)
@@ -55,44 +55,70 @@
 			move.update(_player);
 			hit=null;
 			let hp=false;
-			let hj=false;
+			let c=0;
 			if(vetexs.length>1){
 				for(let i=0;i<vetexs.length-1;i++){
-					let temp=pointToLineDistance(vetexs[i],vetexs[i+1],_player);
-					if(temp.distance<player.radius&&(!hit||temp.distance<hit.distance)){
-						temp.angle=Math.atan2(vetexs[i+1].y-vetexs[i].y,vetexs[i+1].x-vetexs[i].x)
-						if(hit&&hit.distance!=temp.distance){
-							if(getDistance2(hit,temp)>200){
-								hj=true;
+						let temp=pointToLineDistance(vetexs[i],vetexs[i+1],_player);
+						if(temp.distance<player.radius&&(!hit||temp.distance<hit.distance)){
+							temp.angle=Math.atan2(vetexs[i+1].y-vetexs[i].y,vetexs[i+1].x-vetexs[i].x)
+							hit=temp;
+							c++;
+						}else if(hit&&hit.distance==temp.distance){
+							if(hit.x==temp.x&&hit.y==temp.y){
+								hp=true;
+								c++;
 							}
+							break;
 						}
-						hit=temp;
-					}else if(hit&&hit.distance==temp.distance){
-						if(hit.x==temp.x&&hit.y==temp.y){
-							hp=true;
-						}else{
-							hj=true;
-						}
+					}
+				
+		/*	if(!hp&&c<=1){
+				for(let i=0;i<vetexs.length;i++){
+					if(getDistance2(vetexs[i],_player)<player.radius*player.radius){
+						hit=vetexs[i]
+						hp=true;
 						break;
 					}
-				//	}
 				}
+				}*/
 			}
-		if(!hj){
 			if(!hit){
 				player.x=_player.x;
 				player.y=_player.y;
 			}else{
+				let py={x:player.x,y:player.y}
 				if(!hp){
 					let angle=hit.angle
-					move.update(player,angle,move.speed*Math.cos(angle-move.angle));
+					move.update(py,angle,move.speed*Math.cos(angle-move.angle));
+					hit=null
+					for(let i=0;i<vetexs.length-1;i++){
+					let temp=pointToLineDistance(vetexs[i],vetexs[i+1],py);
+					if(temp.distance<player.radius&&(!hit||temp.distance<hit.distance)){
+						temp.angle=Math.atan2(vetexs[i+1].y-vetexs[i].y,vetexs[i+1].x-vetexs[i].x)
+						hit=temp;
+					}
+					}
+					if(!hit){
+						player.x=py.x;
+						player.y=py.y;
+					}
 				}else{
-					let angle=Math.atan2(player.y-hit.y,player.x-hit.x)-Math.PI/2
-					move.update(player,angle,move.speed*Math.cos(angle-move.angle));
+					let angle=Math.atan2(py.y-hit.y,py.x-hit.x)-Math.PI/2
+					move.update(py,angle,move.speed*Math.cos(angle-move.angle));
+					hit=null;
+					for(let i=0;i<vetexs.length-1;i++){
+					let temp=pointToLineDistance(vetexs[i],vetexs[i+1],py);
+					if(temp.distance<player.radius&&(!hit||temp.distance<hit.distance)){
+						temp.angle=Math.atan2(vetexs[i+1].y-vetexs[i].y,vetexs[i+1].x-vetexs[i].x)
+						hit=temp;
+					}
+					}
+					if(!hit){
+						player.x=py.x;
+						player.y=py.y;
+					}
 				}
 			}
-
-		}
 			_player.x=player.x
 			_player.y=player.y
 			player.angle=Math.atan2(my-player.y,mx-player.x);
