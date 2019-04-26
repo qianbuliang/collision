@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<script type="text/javascript" src="../js/moveStatus.js"></script>
+<script type="text/javascript" src="../entity/point.js"></script>
+<script type="text/javascript" src="../entity/segment.js"></script>
+<script type="text/javascript" src="../entity/building.js"></script>
+<script type="text/javascript" src="../entity/player.js"></script>
+<body>
+	<canvas width="800" height="600" id="cvs" style="border: 1px #ccc solid"></canvas>
+	<script type="text/javascript">
+
+		//上个例子中我们计算了线段与线段的交点
+		//这里例子我们来处理计算快速点状或者小物体与另一个物体之间的碰撞,比如子弹与物体之间碰撞
+		//为什么要通过线段与线段之间的碰撞来解决呢,因为代码中的世界是非连续的,上一秒的位置没有碰撞,下一秒可能就进入物体内部或者穿出物体,通过边界检测无法满足需求,所以我们计算下一次移动的位置,与这次位置形成线段,通过线段与物体各个边界的碰撞来解决
+
+		let canvas=document.querySelector('#cvs');
+		let ctx=canvas.getContext('2d');
+		//申明一个点	
+		let player=new Player(100,100,30);
+		let d=Math.PI/2
+		/*for(let i=Math.PI/4;i<=Math.PI*2+Math.PI/4;i+=d){
+			vetexs.push({x:300+Math.cos(i)*200,y:300+Math.sin(i)*200})
+		}*/
+		let vetexs=[{x:300,y:150},{x:400,y:200},{x:500,y:300},{x:700,y:400},{x:700,y:600},{x:400,y:600}]
+		let buildings=[new Building(vetexs)]
+		let hits=[]
+		let move=new MoveStatus(1)
+		let mx=0;
+		let my=0;
+		window.addEventListener('mousemove',e=>{
+			mx=e.clientX
+			my=e.clientY;
+		})
+		
+		update();
+
+		//更新函数
+		function update(){
+			updatePlayer()
+			render();
+			requestAnimationFrame(update);
+		}
+
+		function updatePlayer(){
+			move.update();
+			player.w_angle=move.angle;
+			player.speed=move.speed;
+			for(let i=0;i<5;i++)
+			hits=player.update(buildings);
+			
+			angle=Math.atan2(my-player.y,mx-player.x);
+			player.angle=angle;
+		}
+	
+		
+		
+		//渲染函数
+		function render(){
+			ctx.clearRect(0,0,800,600);
+			renderPlayer(ctx)
+			renderBuildings(ctx)
+		}
+
+		function renderPlayer(ctx){
+			player.render(ctx)
+			hits.forEach(h=>{
+				ctx.fillRect(h.x,h.y,2,2)
+			})
+		}
+
+		function renderBuildings(ctx){
+			buildings.forEach(b=>{
+				b.render(ctx)
+			})
+		}
+
+	</script>
+</body>
+</html>

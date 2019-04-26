@@ -28,7 +28,7 @@
 		vetexs.push({x:300,y:200},{x:400,y:200},{x:500,y:400},{x:400,y:300},{x:350,y:300},{x:300,y:500},{x:200,y:300})
 		//vetexs.push({x:300,y:400})
 		//移动工具类
-		let move=new Move(5)
+		let move=new Move(1)
 		let hit=null;
 		let mx=0;
 		let my=0;
@@ -44,7 +44,7 @@
 
 		//更新函数
 		function update(){
-
+			for(let i=0;i<5;i++)
 			updatePlayer()
 			updateBullets();
 			render();
@@ -72,7 +72,7 @@
 						}
 					}
 				
-		/*	if(!hp&&c<=1){
+			if(!hp&&c<=1){
 				for(let i=0;i<vetexs.length;i++){
 					if(getDistance2(vetexs[i],_player)<player.radius*player.radius){
 						hit=vetexs[i]
@@ -80,7 +80,7 @@
 						break;
 					}
 				}
-				}*/
+				}
 			}
 			if(!hit){
 				player.x=_player.x;
