@@ -5,28 +5,24 @@
 </head>
 <script type="text/javascript" src="../js/moveStatus.js"></script>
 <script type="text/javascript" src="../entity/point.js"></script>
+<script type="text/javascript" src="../entity/hit2d.js"></script>
 <script type="text/javascript" src="../entity/segment.js"></script>
 <script type="text/javascript" src="../entity/building.js"></script>
 <script type="text/javascript" src="../entity/player.js"></script>
+<script type="text/javascript" src="../entity/bullet.js"></script>
 <body>
 	<canvas width="800" height="600" id="cvs" style="border: 1px #ccc solid"></canvas>
 	<script type="text/javascript">
 
-		//上个例子中我们处理了快速点状物体和物体之间的碰撞,这节我们来处理人物慢速移动和物体之间的碰撞
-		//主要难点在于处理与碰撞点的摩擦,而不是停下来,主要计算过程在player类中
-
 		let canvas=document.querySelector('#cvs');
 		let ctx=canvas.getContext('2d');
-		//申明一个点	
 		let player=new Player(100,100,30);
 		let d=Math.PI/2
-		/*for(let i=Math.PI/4;i<=Math.PI*2+Math.PI/4;i+=d){
-			vetexs.push({x:300+Math.cos(i)*200,y:300+Math.sin(i)*200})
-		}*/
+		
 		let vetexs=[{x:10,y:10},{x:790,y:10},{x:790,y:590},{x:10,y:590}]
 
 		let buildings=[new Building(vetexs)]
-
+		let bullets=[];
 		for(let i=0;i<10;i++){
 			buildings.push(new Building(buildArc(150+Math.random()*600,150+Math.random()*300,Math.floor(Math.random()*10)+3,Math.floor(Math.random()*50)+30)))
 		}
@@ -38,8 +34,10 @@
 			mx=e.clientX
 			my=e.clientY;
 		})
-	
-		
+		window.addEventListener('mousedown',e=>{
+			let bullet=new Bullet(player.x+Math.cos(player.angle)*40,player.y+Math.sin(player.angle)*40,15,{r:155,g:155,b:155},player.angle,100)
+			bullets.push(bullet)
+		})
 		update();
 
 		function buildArc(x,y,num,radius){
@@ -54,6 +52,7 @@
 		//更新函数
 		function update(){
 			updatePlayer()
+			updateBullets()
 			render();
 			requestAnimationFrame(update);
 		}
@@ -67,7 +66,18 @@
 			angle=Math.atan2(my-player.y,mx-player.x);
 			player.angle=angle;
 		}
-	
+	   //计算并更新子弹位置
+		function updateBullets(){
+			for(let i=bullets.length-1;i>=0;i--){
+				let bullet=bullets[i]
+				if(bullet.life<=0){
+					bullets.splice(i,1)
+					continue;
+				}
+				bullet.update(buildings)
+				bullet.life--;
+			}
+		}
 		
 		
 		//渲染函数
@@ -75,6 +85,7 @@
 			ctx.clearRect(0,0,800,600);
 			renderPlayer(ctx)
 			renderBuildings(ctx)
+			renderBullets(ctx)
 		}
 
 		function renderPlayer(ctx){
@@ -86,6 +97,12 @@
 
 		function renderBuildings(ctx){
 			buildings.forEach(b=>{
+				b.render(ctx)
+			})
+		}
+
+		function renderBullets(ctx){
+			bullets.forEach(b=>{
 				b.render(ctx)
 			})
 		}

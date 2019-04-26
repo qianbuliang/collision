@@ -11,21 +11,12 @@ class Building{
 		}
 	}
 
-	getMinDistance(p){
-		let hit=null;
-		this.segments.forEach(s=>{
-			let d=s.getDistance(p);
-			if(!hit||hit.distance>d){
-				hit={distance:d,segment:s}
-			}
-			/*minDistance=Math.min(minDistance,d)*/
-		})
-		return hit;
-	}
+
 
 
 	render(ctx){
 		if(this.vetexs.length>1){
+			ctx.lineWidth=1;
 			ctx.strokeStyle="#333";
 			ctx.beginPath();
 			ctx.moveTo(this.vetexs[0].x,this.vetexs[0].y);
