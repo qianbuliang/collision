@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<script type="text/javascript" src="../js/move.js"></script>
+<body>
+	<canvas width="800" height="600"  id="cvs" style="border: 1px #ccc solid;text-align: "></canvas>
+	<script type="text/javascript">
+
+
+
+		let canvas=document.querySelector('#cvs');
+		let ctx=canvas.getContext('2d');
+		//申明一个点	
+		let point={x:100,y:100};
+		//申明两个点作为一条线段
+		let arc={x:200,y:200,r:150}
+		//vetexs.push({x:300,y:400})
+		//移动工具类
+		let move=new Move(5)
+		let hits=[];
+		let ps=[]
+		let angle=0;
+		let range=400;
+		let mx=0;
+		let my=0;
+		window.addEventListener('mousemove',e=>{
+			mx=e.clientX
+			my=e.clientY;
+		})
+		let s;
+		let e;
+		update();
+
+		//更新函数
+		function update(){
+			move.update(point);
+			angle=Math.atan2(my-point.y,mx-point.x);
+			s={start:point,end:{x:point.x+Math.cos(angle)*range,y:point.y+Math.sin(angle)*range}}
+			hits.length=0;
+			ps.length=0;
+			let hit=getIntersectionForArc(arc,s)
+			if(hit){
+				hits.push(hit)
+			}
+		
+			if(Math.pow(arc.x-point.x,2)+Math.pow(arc.y-point.y,2)>Math.pow(arc.r,2)){
+				ps=getArcTangency(arc,s)
+			}
+			render();
+			requestAnimationFrame(update);
+		}
+
+		function getIntersectionForArc(arc,segment){     //交点
+			let a=arc.x;
+			let b=arc.y;
+			let r=arc.r;
+			let x1=segment.start.x;
+			let y1=segment.start.y
+			let x2=segment.end.x
+			let y2=segment.end.y
+			let s1= x1*a-y1*y1+x1*x2-x1*x1+y1*y2-y2*b+y1*b-x2*a
+
+ 			let s2=-2*x1*x2*r*r-2*y1*y2*r*r+2*y2*b*x1*x1+2*y1*y2*a*a+2*x2*x2*y1*b+2*x2*a*y1*y1+2*y2*y2*x1*a+2*x1*x2*b*b-y1*y1*a*a+y1*y1*r*r-x1*x1*b*b+x1*x1*r*r-y2*y2*a*a+y2*y2*r*r-x2*x2*b*b-x2*x2*y1*y1+x2*x2*r*r-y2*y2*x1*x1+2*x1*a*y1*b-2*x1*x2*y1*b-2*y1*y2*x1*a-2*y2*b*x1*a-2*x2*a*y1*b+2*x1*x2*y1*y2-2*x1*x2*y2*b-2*y1*y2*x2*a+2*y2*b*x2*a
+
+ 			let s3=y2*y2+x2*x2+y1*y1-2*x1*x2-2*y1*y2+x1*x1
+
+ 			let m1=-(s1-Math.sqrt(s2))/s3
+
+			let m2=-(s1+Math.sqrt(s2))/s3
+			if(0<=m1&&m1<=1&&0<=m2&&m2<=1){
+				return {x:x1+(x2-x1)*m2,y:y1+(y2-y1)*m2,param:m2}
+			}else if(0<=m2&&m2<=1){
+				return {x:x1+(x2-x1)*m2,y:y1+(y2-y1)*m2,param:m2}
+			}else if(0<=m1&&m1<=1){
+				return {x:x1+(x2-x1)*m1,y:y1+(y2-y1)*m1,param:m1}
+			}
+			return null;
+		}
+
+		function getArcTangency(arc,segment){   //切线
+			let a=arc.x;
+			let b=arc.y;
+			let r=arc.r;
+			let c=segment.start.x;
+			let d=segment.start.y
+			let s1=Math.pow(a,3)-2*a*a*c+b*b*a+a*c*c-2*b*d*a-r*r *a+d*d*a+r*r*c;
+ 			let s2=Math.sqrt(a*a-2*a*c-2*b*d-r*r+b*b+c*c+d*d)
+ 			let s3=(-2*a*c-2*b*d+b*b+a*a+c*c+d*d)
+ 			let x1=(s1+d*r*s2-b*r*s2)/s3
+ 			let x2=(s1-d*r*s2+b*r*s2)/s3
+ 			let v1=-2*b*a*c+b*a*a-2*b*b*d+b*d*d+d*r*r-r*r*b+Math.pow(b,3)+c*c*b
+ 			let v2=Math.sqrt(r*r*(a*a-2*a*c-2*b*d-r*r+b*b+c*c+d*d)*(a-c)*(a-c))
+ 			let v3=(-2*a*c-2*b*d+b*b+a*a+c*c+d*d)
+ 			let y1=(v1+v2)/v3
+ 			let y2=(v1-v2)/v3
+ 			let arr=[]
+ 			if(Math.abs(Math.pow(x1-arc.x,2)+Math.pow(y1-arc.y,2)-Math.pow(arc.r,2))<0.1){
+ 				arr.push({x:x1,y:y1})
+ 			}
+ 			if(Math.abs(Math.pow(x1-arc.x,2)+Math.pow(y2-arc.y,2)-Math.pow(arc.r,2))<0.1){
+ 				arr.push({x:x1,y:y2})
+ 			}
+ 			if(Math.abs(Math.pow(x2-arc.x,2)+Math.pow(y1-arc.y,2)-Math.pow(arc.r,2))<0.1){
+ 				arr.push({x:x2,y:y1})
+ 			}
+ 			if(Math.abs(Math.pow(x2-arc.x,2)+Math.pow(y2-arc.y,2)-Math.pow(arc.r,2))<0.1){
+ 				arr.push({x:x2,y:y2})
+ 			}
+ 			return arr;
+		}
+
+		
+		//渲染函数
+		function render(){
+			ctx.clearRect(0,0,800,600);
+			drawPoint()
+			drawLine()
+			drawHit()
+		}
+		//画代表玩家的点
+		function drawPoint(){
+			ctx.strokeStyle="black"
+			ctx.beginPath();
+			ctx.arc(point.x,point.y,2,0,Math.PI*2);
+			ctx.moveTo(point.x,point.y);
+			ctx.lineTo(s.end.x,s.end.y);
+			ctx.closePath();
+			ctx.fill();
+			ctx.stroke();
+		}
+		//画物体
+		function drawLine(){
+			ctx.strokeStyle="black"
+			ctx.beginPath();
+			ctx.arc(arc.x,arc.y,arc.r,0,Math.PI*2)
+			ctx.closePath();
+			ctx.stroke();
+		}
+		//画碰撞点
+		function drawHit(){
+			ctx.beginPath();
+			ctx.fillStyle="red"
+			if(hits.length){
+				hits.forEach(hit=>{
+					ctx.arc(hit.x,hit.y,5,0,Math.PI*2);
+				})
+			}
+			ctx.fill();
+
+			ctx.beginPath();
+			ctx.strokeStyle="red"
+			if(ps.length){
+				ps.forEach(p=>{
+					ctx.moveTo(point.x,point.y);
+					ctx.lineTo(p.x,p.y);
+				})
+			}
+			ctx.stroke();
+		}
+
+	
+
+	
+
+	</script>
+</body>
+</html>
