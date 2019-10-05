@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<script type="text/javascript" src="../js/move.js"></script>
+<body>
+	<canvas width="800" height="600" id="cvs" style="border: 1px #ccc solid"></canvas>
+	<script type="text/javascript">
+
+		let canvas=document.querySelector('#cvs');
+		let ctx=canvas.getContext('2d');
+		//申明一个点	
+		let point={x:100,y:100};
+		let arc={x:200,y:200,r:50}
+	
+		//移动工具类
+		let move=new Move(5)
+		let hits=[];
+		let angle=0;
+		let mx=0;
+		let my=0;
+		window.addEventListener('mousemove',e=>{
+			mx=e.clientX
+			my=e.clientY;
+		})
+		update();
+
+		//更新函数
+		function update(){
+			move.update(point);
+		
+			let a=arc.x
+			let b=arc.y;
+			let r=arc.r
+			let c=point.x;
+			let d=point.y;
+			hits.length=0
+			let x=(a*c*c+c*r*r-2*c*a*a-2*b*a*d-d*r*Math.sqrt(c*c-2*a*c+a*a-r*r+b*b-2*b*d+d*d)+b*r*Math.sqrt(c*c-2*a*c+a*a-r*r+b*b-2*b*d+d*d)+d*d*a+a*b*b+Math.pow(a,3)-a*r*r)/(-2*b*d-2*a*c+d*d+c*c+a*a+b*b)
+
+			let y=(Math.pow(b,3)-2*b*a*c-b*r*r-2*b*b*d+b*a*a+r*r*d+b*d*d+b*c*c+Math.sqrt(r*r*Math.pow(c-a,2)*(c*c-2*a*c+a*a-r*r+b*b-2*b*d+d*d)))/(-2*b*d-2*a*c+d*d+c*c+a*a+b*b)
+			hits.push({x:x,y:y})			
+			render();
+			requestAnimationFrame(update);
+		}
+
+		
+		//渲染函数
+		function render(){
+			ctx.clearRect(0,0,800,600);
+			drawPoint()
+			drawLine()
+			drawHit()
+		}
+		//画代表玩家的点
+		function drawPoint(){
+			ctx.beginPath();
+			ctx.arc(point.x,point.y,2,0,Math.PI*2);
+			ctx.closePath();
+			ctx.fill();
+		}
+		//画线段
+		function drawLine(){
+			ctx.beginPath();
+			ctx.arc(arc.x,arc.y,arc.r,0,Math.PI*2)
+			ctx.closePath();
+			ctx.stroke();
+		}
+		//画碰撞点
+		function drawHit(){
+			ctx.fillStyle="red"
+			if(hits.length){
+				hits.forEach(hit=>{
+					ctx.fillRect(hit.x-5,hit.y-5,10,10)
+				})
+			}
+		}
+
+	
+
+	</script>
+</body>
+</html>

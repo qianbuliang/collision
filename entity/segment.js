@@ -66,4 +66,6 @@ class Segment{
         return new Hit2d(r_px + r_dx * T1, r_py + r_dy * T1, segment.angle, T1);
     }
 
+    
+
 }

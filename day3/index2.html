@@ -26,6 +26,7 @@
 		for(let i=0;i<10;i++){
 			buildings.push(new Building(buildArc(150+Math.random()*600,150+Math.random()*300,Math.floor(Math.random()*10)+3,Math.floor(Math.random()*50)+30)))
 		}
+		buildings.push(new Building([{x:300,y:100},{x:200,y:100}]))
 		let hits=[]
 		let move=new MoveStatus(5)
 		let mx=0;
