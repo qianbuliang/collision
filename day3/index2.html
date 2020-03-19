@@ -28,7 +28,7 @@
 		}
 		buildings.push(new Building([{x:300,y:100},{x:200,y:100}]))
 		let hits=[]
-		let move=new MoveStatus(5)
+		let move=new MoveStatus(2)
 		let mx=0;
 		let my=0;
 		window.addEventListener('mousemove',e=>{
@@ -36,7 +36,7 @@
 			my=e.clientY;
 		})
 		window.addEventListener('mousedown',e=>{
-			let bullet=new Bullet(player.x+Math.cos(player.angle)*40,player.y+Math.sin(player.angle)*40,15,{r:155,g:155,b:155},player.angle,100)
+			let bullet=new Bullet(player.x+Math.cos(player.angle)*40,player.y+Math.sin(player.angle)*40,105,{r:155,g:155,b:155},player.angle,100)
 			bullets.push(bullet)
 		})
 		update();
@@ -92,6 +92,7 @@
 		function renderPlayer(ctx){
 			player.render(ctx)
 			hits.forEach(h=>{
+				console.log(111)
 				ctx.fillRect(h.x,h.y,2,2)
 			})
 		}

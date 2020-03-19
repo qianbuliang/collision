@@ -106,7 +106,7 @@
 			let dy3=p4.y-p3.y;  //Δy3
 			let k1=(dy1/dx1);   
 			let k3=(dy3/dx3);
-			if(k1==k3||k1==-k3)return null; //斜率相等或者相反,代表平行,平行无交点
+			if(k1==k3||)return null; //斜率相等,代表平行,平行无交点
 			let m=(p1.y+k1*(p3.x-p1.x)-p3.y)/(dy3-(k1)*dx3)
 			if (isNaN(m)) return null;
 			let n=(p3.x+dx3*m-p1.x)/(dx1)
@@ -117,7 +117,6 @@
 			return {
 				x:p3.x+dx3*m, //碰撞点的x坐标
 				y:p3.y+dy3*m, //碰撞点的y坐标
-				rate:m        //在线段3-4的占比
 			}
 		}
 
