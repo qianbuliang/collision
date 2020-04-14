@@ -40,11 +40,20 @@
 			angle=Math.atan2(my-point.y,mx-point.x)
 			let p4={x:point.x+Math.cos(angle)*range,y:point.y+Math.sin(angle)*range}
 			hits.length=0;
+			let n=0
 			for(let i=0;i<vetexs.length-1;i++){
-				let hit=getIntersection(vetexs[i],vetexs[i+1],point,p4)
+				/*let hit=getIntersection(vetexs[i],vetexs[i+1],point,p4)
 				if(hit){
 					hits.push(hit)
+				}*/
+				if(getHit(vetexs[i],vetexs[i+1],{x:point.x,y:point.y},{x:point.x+Math.cos(angle)*100000,y:point.y+Math.sin(angle)*100000})){
+					n++
 				}
+			}
+			if(n%2==1){
+				console.log('在内')
+			}else{
+				console.log(n)
 			}
 			
 			render();
@@ -79,8 +88,10 @@
 		//画碰撞点
 		function drawHit(){
 			ctx.beginPath();
-			ctx.moveTo(point.x,point.y);
-			ctx.lineTo(point.x+Math.cos(angle)*range,point.y+Math.sin(angle)*range);
+			let sp={x:point.x-Math.cos(angle)*10000,y:point.y-Math.sin(angle)*10000};
+			let ep={x:point.x+Math.cos(angle)*10000,y:point.y+Math.sin(angle)*10000};
+			ctx.moveTo(sp.x,sp.y);
+			ctx.lineTo(ep.x,ep.y);
 			ctx.closePath();
 			ctx.stroke();
 			ctx.fillStyle="red"
@@ -106,7 +117,7 @@
 			let dy3=p4.y-p3.y;  //Δy3
 			let k1=(dy1/dx1);   
 			let k3=(dy3/dx3);
-			if(k1==k3||)return null; //斜率相等,代表平行,平行无交点
+			if(k1==k3||k1==-k3)return null; //斜率相等或者相反,代表平行,平行无交点
 			let m=(p1.y+k1*(p3.x-p1.x)-p3.y)/(dy3-(k1)*dx3)
 			if (isNaN(m)) return null;
 			let n=(p3.x+dx3*m-p1.x)/(dx1)
@@ -117,7 +128,26 @@
 			return {
 				x:p3.x+dx3*m, //碰撞点的x坐标
 				y:p3.y+dy3*m, //碰撞点的y坐标
+				rate:m        //在线段3-4的占比
 			}
+		}
+
+		function getHit(p1,p2,p3,p4) {
+			let dx1=p2.x-p1.x;  //Δx1
+			let dy1=p2.y-p1.y;  //Δy1
+			let dx3=p4.x-p3.x;  //Δx3
+			let dy3=p4.y-p3.y;  //Δy3
+			let k1=(dy1/dx1);   
+			let k3=(dy3/dx3);
+			if(k1==k3||k1==-k3)return false; //斜率相等或者相反,代表平行,平行无交点
+			let m=(p1.y+k1*(p3.x-p1.x)-p3.y)/(dy3-(k1)*dx3)
+			if (isNaN(m)) return false;
+			let n=(p3.x+dx3*m-p1.x)/(dx1)
+			//console.log(m,n)
+			if(m<0||m>1||n<0||n>1){
+				return false;
+			}
+			return true
 		}
 
 		//检测方法二通过向量和三角函数计算,效率不如1,不介绍,有兴趣自己看

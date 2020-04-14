@@ -62,7 +62,7 @@ class MoveStatus{
             }else if(k==-2){
                 this.angle=Math.PI-Math.PI/4;
             }
-            this.speed=this.initspeed;
+            this.speed=1;
         }
     
     }
